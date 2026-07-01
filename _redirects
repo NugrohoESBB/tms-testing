@@ -1,0 +1,16 @@
+# ── Auth ──
+/login       /pages/auth/login.html       200
+/register    /pages/auth/register.html    200
+
+# ── Dashboard ──
+/dashboard              /pages/dashboard/index.html               200
+/schedules              /pages/dashboard/schedules.html            200
+/attendance             /pages/dashboard/attendance.html           200
+/grades                 /pages/dashboard/grades.html                200
+/students                /pages/dashboard/students.html              200
+/classes                 /pages/dashboard/classes.html                200
+/subjects                /pages/dashboard/subjects.html               200
+/profile                 /pages/dashboard/profile.html                200
+/settings                /pages/dashboard/settings.html               200
+/account-management       /pages/dashboard/account-management.html    200
+
