@@ -32,26 +32,26 @@ const NAV_ITEMS = [
   {
     group: "Menu Utama",
     items: [
-      { icon: "layout-dashboard", label: "Dasbor",        href: "./index.html" },
-      { icon: "calendar-days",    label: "Jadwal",         href: "./schedule.html" },
-      { icon: "clipboard-list",   label: "Kehadiran",      href: "./attendance.html" },
-      { icon: "book-open",        label: "Nilai",          href: "./grades.html" },
+      { icon: "layout-dashboard", label: "Dasbor",        href: "/dashboard" },
+      { icon: "calendar-days",    label: "Jadwal",         href: "/schedule" },
+      { icon: "clipboard-list",   label: "Kehadiran",      href: "/attendance" },
+      { icon: "book-open",        label: "Nilai",          href: "/grades" },
     ],
   },
   {
     group: "Data",
     items: [
-      { icon: "users",            label: "Siswa",          href: "./students.html" },
-      { icon: "school",       label: "Kelas",          href: "./classes.html" },
-      { icon: "book-marked",      label: "Mata Pelajaran", href: "./subjects.html" },
+      { icon: "users",            label: "Siswa",          href: "/students" },
+      { icon: "school",       label: "Kelas",          href: "/classes" },
+      { icon: "book-marked",      label: "Mata Pelajaran", href: "/subjects" },
     ],
   },
   {
     group: "Akun",
     items: [
-      { icon: "user-circle",      label: "Profil Saya",    href: "./profile.html" },
-      { icon: "settings",         label: "Pengaturan",     href: "./settings.html" },
-      { icon: "shield-check",     label: "Manajemen Akun", href: "./account-management.html", adminOnly: true },
+      { icon: "user-circle",      label: "Profil Saya",    href: "/profile" },
+      { icon: "settings",         label: "Pengaturan",     href: "/settings" },
+      { icon: "shield-check",     label: "Manajemen Akun", href: "/account-management", adminOnly: true },
     ],
   },
 ];
@@ -78,7 +78,8 @@ export async function renderSidebar({ userName = "Guru", userRole = "Pengajar", 
     .toUpperCase();
 
   // Tentukan halaman aktif dari URL saat ini
-  const currentPath = window.location.pathname.split("/").pop() || "index.html";
+  const currentPath = window.location.pathname.replace(/\/$/, "") || "/dashboard";
+  // const currentPath = window.location.pathname.split("/").pop() || "index.html";
 
   // ── Render HTML ──
   root.innerHTML = `
@@ -174,7 +175,7 @@ export async function renderSidebar({ userName = "Guru", userRole = "Pengajar", 
       // Cari nav-item Kehadiran dan tambahkan badge
       const navItems = document.querySelectorAll(".nav-item");
       navItems.forEach((el) => {
-        if (el.getAttribute("href")?.includes("attendance.html")) {
+        if (el.getAttribute("href")?.includes("/attendance")) {
           // Hapus badge lama kalau ada
           el.querySelector(".nav-badge")?.remove();
           const badge = document.createElement("span");
@@ -256,6 +257,6 @@ function _bindLogout() {
 
     clearGradeSettingsCache();
 
-    window.location.href = "../../pages/auth/login.html";
+    window.location.href = "/login";
   });
 }
