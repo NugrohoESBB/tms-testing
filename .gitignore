@@ -1,0 +1,7 @@
+config/supabase.config.js
+database/finalDatabase.sql
+supabase/edge-function/admin-update-account/
+
+
+connection-supabase.html
+note.txt
