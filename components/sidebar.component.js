@@ -32,7 +32,7 @@ const NAV_ITEMS = [
   {
     group: "Menu Utama",
     items: [
-      { icon: "layout-dashboard", label: "Dasbor",        href: "./index.html" },
+      { icon: "layout-dashboard", label: "Dasboard",        href: "./index.html" },
       { icon: "calendar-days",    label: "Jadwal",         href: "./schedule.html" },
       { icon: "clipboard-list",   label: "Kehadiran",      href: "./attendance.html" },
       { icon: "book-open",        label: "Nilai",          href: "./grades.html" },

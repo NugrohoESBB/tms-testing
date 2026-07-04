@@ -19,7 +19,7 @@
  * @param {string} options.userName    - Nama user untuk avatar
  */
 export function renderNavbar({
-  pageTitle = "Dasbor",
+  pageTitle = "Dasboard",
   pageSubtitle = "",
   userName = "Guru",
 } = {}) {
