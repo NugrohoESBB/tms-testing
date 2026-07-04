@@ -408,7 +408,8 @@
 
 .rekap-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   min-width: 700px;
 }
 
@@ -426,14 +427,19 @@
 }
 
 /* Sticky kolom nama siswa */
-.rekap-table thead th:first-child,
-.rekap-table tbody td:first-child {
+.rekap-table thead th.sticky-col,
+.rekap-table tbody td.sticky-col {
   position: sticky;
   left: 0;
   z-index: 3;
-  background: var(--color-bg);
-  border-right: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  background-clip: padding-box;
+  box-shadow: 2px 0 4px -2px rgba(15, 23, 42, 0.15);
   min-width: 12rem;
+}
+
+.rekap-table thead th.sticky-col {
+  background-color: var(--color-bg);
 }
 
 .rekap-table tbody tr {
@@ -442,6 +448,10 @@
 }
 
 .rekap-table tbody tr:hover { background: var(--color-bg); }
+
+.rekap-table tbody tr:hover td.sticky-col {
+  background-color: var(--color-bg);
+}
 
 .rekap-table tbody tr + tr {
   border-top: 1px solid var(--color-border);
@@ -622,18 +632,31 @@
 }
 
 /* Baris pertama header (nama mapel): warna lebih menonjol */
-.rekap-multi-table table thead tr:first-child th {
+.rekap-multi-table table thead tr.sticky-col th {
   background: rgba(37,99,235,.05);
   color: var(--color-primary);
   font-size: 0.8125rem;
 }
 
 /* Sticky kolom nama siswa */
-.rekap-multi-table table thead th:first-child,
-.rekap-multi-table table tbody td:first-child {
+.rekap-multi-table table thead th.sticky-col,
+.rekap-multi-table table tbody td.sticky-col {
   position: sticky;
   left: 0;
   z-index: 3;
-  background: var(--color-bg);
-  border-right: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  background-clip: padding-box;
+  box-shadow: 2px 0 4px -2px rgba(15, 23, 42, 0.15);
+}
+
+.rekap-multi-table table thead th.sticky-col {
+  background-color: var(--color-bg);
+}
+
+.rekap-multi-table table thead tr.sticky-col th.sticky-col {
+  background-color: var(--color-bg);
+}
+
+.rekap-multi-table table tbody tr:hover td.sticky-col {
+  background-color: var(--color-bg);
 }

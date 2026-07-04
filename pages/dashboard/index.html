@@ -9,6 +9,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -137,13 +138,32 @@
 
       </div>
 
-      <!-- JADWAL HARI INI -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
+        <div class="card-soft p-5 lg:col-span-2">
+          <h3 class="text-sm font-semibold mb-4">Jadwal Mengajar Hari Ini</h3>
+          <div id="schedule-list">...</div>
+        </div>
+        <div class="card-soft p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-semibold" id="mini-cal-title">Kalender</h3>
+          </div>
+          <div id="mini-calendar" class="grid grid-cols-7 gap-1 text-center"></div>
+        </div>
+      </div>
+
       <div class="card-soft p-5 mb-4">
-        <h3 class="text-sm font-semibold mb-4">Jadwal Mengajar Hari Ini</h3>
-        <div id="schedule-list">
-          <div class="skeleton skeleton-row"></div>
-          <div class="skeleton skeleton-row"></div>
-          <div class="skeleton skeleton-row" style="width:70%"></div>
+        <h3 class="text-sm font-semibold mb-4">Perlu Perhatian</h3>
+        <div id="action-items">...</div>
+      </div>
+
+      <div class="grid grid-cols-1 gap-4 mb-4 lg:grid-cols-2">
+        <div class="card-soft p-5">
+          <h3 class="text-sm font-semibold mb-4">Top & Bottom Siswa</h3>
+          <div id="top-bottom-students">...</div>
+        </div>
+        <div class="card-soft p-5">
+          <h3 class="text-sm font-semibold mb-4">Tren Kehadiran 7 Hari</h3>
+          <div style="height:180px"><canvas id="attendance-trend-chart"></canvas></div>
         </div>
       </div>
 
@@ -164,7 +184,7 @@
   import { renderSidebar }     from "../../components/sidebar.component.js";
   import { renderNavbar }      from "../../components/navbar.component.js";
   import { getCurrentSession } from "../../services/auth.service.js";
-  import { getDashboardStats, getTodaySchedules } from "../../services/dashboard.service.js";
+  import { getDashboardStats, getTodaySchedules, getActionItems, getTopBottomStudents, getWeeklyAttendanceTrend, getMonthScheduleDates } from "../../services/dashboard.service.js";
   import { getSupabaseClient } from "../../services/supabase.service.js";
 
   // Guard
@@ -174,6 +194,7 @@
   }
 
   const userName = session?.user?.user_metadata?.full_name || "Guru";
+  const now = new Date();
 
   // Cek role dari public.teachers
   const supabaseForRole = await getSupabaseClient();
@@ -202,13 +223,147 @@
     `${greeting}, ${userName.split(" ")[0]}`;
 
   // Fetch parallel
-  const [stats, schedules] = await Promise.all([
+  const [stats, schedules, actionItems, topBottom, trend, scheduleDates] = await Promise.all([
     getDashboardStats(),
     getTodaySchedules(),
+    getActionItems(isAdmin),
+    getTopBottomStudents(isAdmin, 5),
+    getWeeklyAttendanceTrend(isAdmin),
+    getMonthScheduleDates(now.getFullYear(), now.getMonth() + 1, isAdmin),
   ]);
 
   renderStats(stats);
   renderSchedules(schedules);
+  renderActionItems(actionItems);
+  renderTopBottom(topBottom);
+  renderAttendanceTrend(trend);
+  renderMiniCalendar(now, scheduleDates);
+
+  function renderMiniCalendar(refDate, scheduleDates) {
+    const year = refDate.getFullYear();
+    const month = refDate.getMonth(); // 0-indexed
+    const todayStr = refDate.toISOString().split("T")[0];
+
+    const monthNames = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+    document.getElementById("mini-cal-title").textContent = `${monthNames[month]} ${year}`;
+
+    const firstDayOfWeek = new Date(year, month, 1).getDay(); // 0=Min
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const dayLabels = ["M","S","S","R","K","J","S"];
+
+    let html = dayLabels.map((d) => `<div class="text-[0.65rem] font-semibold" style="color:var(--color-text-muted)">${d}</div>`).join("");
+
+    for (let i = 0; i < firstDayOfWeek; i++) html += `<div></div>`;
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const hasSchedule = scheduleDates.has(dateStr);
+      const isToday = dateStr === todayStr;
+
+      html += `
+        <div class="relative flex flex-col items-center justify-center py-1.5 rounded-lg text-xs"
+            style="${isToday ? 'background:var(--color-primary);color:white;font-weight:700' : ''}">
+          ${day}
+          ${hasSchedule && !isToday ? '<span style="width:4px;height:4px;border-radius:50%;background:var(--color-primary);position:absolute;bottom:2px"></span>' : ""}
+        </div>`;
+    }
+
+    document.getElementById("mini-calendar").innerHTML = html;
+  }
+
+  function renderActionItems({ unrecordedSchedules, ungradedAssignments }) {
+    const container = document.getElementById("action-items");
+    const items = [
+      ...unrecordedSchedules.map((s) => ({
+        icon: "clipboard-x",
+        color: "var(--color-danger)",
+        text: `Belum absen: ${s.subject} — ${s.className} (${s.time})`,
+        href: "../attendance/attendance.html",
+      })),
+      ...ungradedAssignments.map((a) => ({
+        icon: "clipboard-list",
+        color: "var(--color-warning)",
+        text: `${a.title} (${a.className}): ${a.missing} dari ${a.total} siswa belum dinilai`,
+        href: "../grades/grades.html",
+      })),
+    ];
+
+    if (items.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i data-lucide="check-circle-2" style="width:2rem;height:2rem;color:var(--color-success)"></i>
+          <p>Semua sudah beres, tidak ada yang perlu ditindaklanjuti.</p>
+        </div>`;
+      lucide.createIcons();
+      return;
+    }
+
+    container.innerHTML = items.map((item) => `
+      <a href="${item.href}" class="flex items-center gap-3 p-3 rounded-lg mb-2 hover:opacity-80"
+        style="background:var(--color-bg);text-decoration:none;color:inherit">
+        <i data-lucide="${item.icon}" style="width:1rem;height:1rem;color:${item.color};flex-shrink:0"></i>
+        <span class="text-sm flex-1">${item.text}</span>
+        <i data-lucide="chevron-right" style="width:1rem;height:1rem;color:var(--color-text-muted)"></i>
+      </a>
+    `).join("");
+    lucide.createIcons();
+  }
+
+  function renderTopBottom({ top, bottom }) {
+    const container = document.getElementById("top-bottom-students");
+    if (!top.length) {
+      container.innerHTML = `<div class="empty-state"><p>Belum ada data nilai.</p></div>`;
+      return;
+    }
+
+    const row = (s, isTop) => `
+      <div class="flex items-center justify-between py-1.5">
+        <span class="text-sm truncate">${s.name}</span>
+        <span class="text-sm font-bold" style="color:${isTop ? 'var(--color-success)' : 'var(--color-danger)'}">${s.avg}</span>
+      </div>`;
+
+    container.innerHTML = `
+      <p class="text-xs font-semibold mb-1" style="color:var(--color-text-muted)">TERTINGGI</p>
+      ${top.map((s) => row(s, true)).join("")}
+      <p class="text-xs font-semibold mt-3 mb-1" style="color:var(--color-text-muted)">TERENDAH</p>
+      ${bottom.map((s) => row(s, false)).join("")}
+    `;
+  }
+
+  function renderAttendanceTrend(trend) {
+    const days = ["Min","Sen","Sel","Rab","Kam","Jum","Sab"];
+    const labels = trend.map((t) => days[new Date(t.date + "T00:00:00").getDay()]);
+    const values = trend.map((t) => t.percent);
+    const colors = values.map((v) =>
+      v >= 80 ? "#22c55e" : v >= 50 ? "#f59e0b" : "#ef4444"
+    );
+
+    const ctx = document.getElementById("attendance-trend-chart");
+    new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{
+          data: values,
+          backgroundColor: colors,
+          borderRadius: 6,
+          maxBarThickness: 32,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (ctx) => `${ctx.raw}% hadir` } },
+        },
+        scales: {
+          y: { beginAtZero: true, max: 100, ticks: { callback: (v) => v + "%" } },
+          x: { grid: { display: false } },
+        },
+      },
+    });
+  }
 
   function renderStats(s) {
     const val = (v) => (v != null ? v : "—");

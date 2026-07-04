@@ -1230,17 +1230,34 @@
     const rankMap = {};
     sorted.forEach((s,i) => { rankMap[s.id] = s.finalScore != null ? i+1 : "—"; });
 
-    // ── Build HTML ──
+    // ── Build HTML old ──
+    // const wrap = document.createElement("div");
+    // wrap.className = "rekap-multi-table rekap-wrapper";
+    // wrap.style.cssText = "margin-bottom:1.5rem;overflow-x:auto;";
+    // outer: bukan scroll container, cuma pembungkus label + tabel
+    const outer = document.createElement("div");
+    outer.style.cssText = "margin-bottom:1.5rem;";
+
+    // label mata pelajaran, DILUAR area scroll supaya tidak ikut
+    // ter-scroll bersama tabel (ini penyebab dia kepotong & nabrak
+    // dengan header sticky sebelumnya)
+    const label = document.createElement("div");
+    label.style.cssText = "font-size:.8125rem;font-weight:700;color:var(--color-text-muted);margin-bottom:.5rem;padding-left:.25rem";
+    label.innerHTML = `Mata Pelajaran: <span style="color:var(--color-text)">${subjectName}</span>`;
+    outer.appendChild(label);
+
+    // wrap: ini yang jadi scroll container-nya, isinya cuma tabel
     const wrap = document.createElement("div");
     wrap.className = "rekap-multi-table rekap-wrapper";
-    wrap.style.cssText = "margin-bottom:1.5rem;overflow-x:auto;";
+    wrap.style.cssText = "overflow-x:auto;";
+    outer.appendChild(wrap);
 
     // Baris 1: Mapel header (full width)
     // Baris 2: Kategori grup (colspan per kategori)
     // Baris 3: Judul assignment individual
 
     let row1 = `<tr>
-      <th rowspan="3" style="min-width:9rem;vertical-align:middle">Nama Siswa</th>
+      <th rowspan="3" class="sticky-col" style="min-width:9rem;vertical-align:middle">Nama Siswa</th>
       <th colspan="${totalAsgCols + extraCols}" style="text-align:center;background:rgba(37,99,235,.06);color:var(--color-primary)">${subjectName}</th>
     </tr>`;
 
@@ -1277,10 +1294,10 @@
       const grade     = toGrade(s.finalScore);
 
       let row = `<tr>
-        <td>
-          <div style="font-weight:600">${s.full_name}</div>
-          ${s.nis?`<div style="font-size:.72rem;color:var(--color-text-muted)">${s.nis}</div>`:""}
-        </td>`;
+      <td class="sticky-col">
+        <div style="font-weight:600">${s.full_name}</div>
+        ${s.nis?`<div style="font-size:.72rem;color:var(--color-text-muted)">${s.nis}</div>`:""}
+      </td>`;
 
       orderedAsg.forEach(a => {
         const sc = s.scores?.[a.id];
@@ -1305,17 +1322,25 @@
       return row;
     }).join("");
 
+    // wrap.innerHTML = `
+    //   <div style="font-size:.8125rem;font-weight:700;color:var(--color-text-muted);margin-bottom:.5rem;padding-left:.25rem">
+    //     Mata Pelajaran: <span style="color:var(--color-text)">${subjectName}</span>
+    //   </div>
+    //   <table class="rekap-table" style="min-width:max-content">
+    //     <thead>${row1}${row2}${row3}</thead>
+    //     <tbody>${tbody}</tbody>
+    //   </table>
+    // `;
+
+    // return wrap;
     wrap.innerHTML = `
-      <div style="font-size:.8125rem;font-weight:700;color:var(--color-text-muted);margin-bottom:.5rem;padding-left:.25rem">
-        Mata Pelajaran: <span style="color:var(--color-text)">${subjectName}</span>
-      </div>
       <table class="rekap-table" style="min-width:max-content">
         <thead>${row1}${row2}${row3}</thead>
         <tbody>${tbody}</tbody>
       </table>
     `;
 
-    return wrap;
+    return outer;
   }
 
   window.onRekapClassChange = onRekapClassChange;
